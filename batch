@@ -1,16 +1,16 @@
 #!/bin/bash
-#SBATCH --job-name=tRNA-Seq analysis
+#SBATCH --job-name=RNA-Seq
 #SBATCH -o rnaseq.out
 #SBATCH -e rnaseq.err
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=anujsharma@ufl.edu
+#SBATCH --mail-user=username@ufl.edu
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=12GB
 #SBATCH --time=18:00:00
 #SBATCH --account=gms6231
 #SBATCH --qos=gms6231
-#SBATCH --workdir=/ufrc/gms6231/share/anujsharma/project/
+#SBATCH --workdir=/ufrc/gms6231/share/username/project/
 
 pwd;hostname;date
 
