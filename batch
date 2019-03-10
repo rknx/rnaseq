@@ -3,14 +3,14 @@
 #SBATCH -o rnaseq.out
 #SBATCH -e rnaseq.err
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=username@ufl.edu
+#SBATCH --mail-user=anujsharma@ufl.edu
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=12GB
 #SBATCH --time=18:00:00
 #SBATCH --account=gms6231
 #SBATCH --qos=gms6231
-#SBATCH --workdir=/ufrc/gms6231/share/username/project/
+#SBATCH --workdir=/ufrc/gms6231/share/anujsharma/Project/
 
 pwd;hostname;date
 
@@ -23,6 +23,16 @@ fastq='/ufrc/gms6231/share/Project/RawData'
 gene='/ufrc/gms6231/share/Project/RawData/Drosophila_melanogaster/Ensembl/BDGP5.25/Annotation/Genes/genes.gtf'
 bowtie='/ufrc/gms6231/share/Project/RawData/Drosophila_melanogaster/Ensembl/BDGP5.25/Sequence/Bowtie2Index'
 
+# Symbolic links to files
+mkdir bowtie2Index fastq refs
+ln -s $bowtie/*.bt2 ./bowtie2index/
+ln -s $bowtie/genome.fa ./refs
+ln $gene ./refs
+ln $fastq/*fq.gz ./fastq
+
+# Make output directories
+mkdir tophat cufflinks cuffmerge cuffdiff cuffcompare R
+
 # Aligning reads with Tophat
 tophat -p 8 -G $gene -o ./tophat/C1_R1 $bowtie/genome $fastq/GSM794483_C1_R1_1.fq.gz $fastq/GSM794483_C1_R1_2.fq.gz
 tophat -p 8 -G $gene -o ./tophat/C1_R2 $bowtie/genome $fastq/GSM794484_C1_R2_1.fq.gz $fastq/GSM794484_C1_R2_2.fq.gz
@@ -34,52 +44,47 @@ wait
 echo 'Completed tophat.'; date
 
 # Assemble transcript with Cufflinks
-cufflinks -p 8 -o ./cufflinks/C1_R1 ./tophat/C1_R1/accepted_hits.bam
-cufflinks -p 8 -o ./cufflinks/C1_R2 ./tophat/C1_R2/accepted_hits.bam 
-cufflinks -p 8 -o ./cufflinks/C1_R3 ./tophat/C1_R3/accepted_hits.bam 
-cufflinks -p 8 -o ./cufflinks/C2_R1 ./tophat/C2_R1/accepted_hits.bam 
-cufflinks -p 8 -o ./cufflinks/C2_R2 ./tophat/C2_R2/accepted_hits.bam 
-cufflinks -p 8 -o ./cufflinks/C2_R3 ./tophat/C2_R3/accepted_hits.bam 
+list=("C1_R1" "C1_R2" "C1_R3" "C2_R1" "C2_R2" "C2_R3")
+for i in ${list[@]}; do cufflinks -p 8 -o ./cufflinks/$i ./tophat/$i/accepted_hits.bam; done
 wait
 echo 'Complete cufflinks.'; date
 
 # Merge transcripts into transcriptome
-echo -e './cufflinks/C1_R1/transcripts.gtf\n./cufflinks/C1_R2/transcripts.gtf\n./cufflinks/C1_R3/transcripts.gtf\n./cufflinks/C2_R1/transcripts.gtf\n./cufflinks/C2_R2/transcripts.gtf\n./cufflinks/C2_R3/transcripts.gtf' > assemblies.txt
-cuffmerge -o ./assembly -g $gene -s $bowtie/genome.fa -p 8 assemblies.txt
+echo -e './cufflinks/C1_R1/transcripts.gtf\n./cufflinks/C1_R2/transcripts.gtf\n./cufflinks/C1_R3/transcripts.gtf\n./cufflinks/C2_R1/transcripts.gtf\n./cufflinks/C2_R2/transcripts.gtf\n./cufflinks/C2_R3/transcripts.gtf' > ./cuffmerge/assemblies.txt
+cuffmerge -o ./cuffmerge -g $gene -s $bowtie/genome.fa -p 8 ./cuffmerge/assemblies.txt
 wait
 echo 'Complete cuffmerge.'; date
 
 # Find differential expression
-cuffdiff -o cuffdiff -b $bowtie/genome.fa -p 8 -L C1,C2 -u ./assembly/merged.gtf \
+cuffdiff -o cuffdiff -b $bowtie/genome.fa -p 8 -L C1,C2 -u ./cuffmerge/merged.gtf \
 ./tophat/C1_R1/accepted_hits.bam,./tophat/C1_R2/accepted_hits.bam,./tophat/C1_R3/accepted_hits.bam \
 ./tophat/C2_R1/accepted_hits.bam,./tophat/C2_R2/accepted_hits.bam,./tophat/C2_R3/accepted_hits.bam
 wait
 echo 'Complete cuffdiff.'; date
 
-# Make expression plot
-Rscript expplot.r
+# Alignment metrics
+for i in ./tophat/*/align_summary.txt; do echo $i; cat $i; echo -e "\n\n"; done;
+for i in ./tophat/*/accepted_hits.bam; do echo $i; samtools index $i ; done;
+for i in ./tophat/*/accepted_hits.bam; do echo $i; samtools idxstats $i ; echo -e "\n"; done;
 wait
-echo 'Complete expression plot.'; date
+echo 'Complete samtools.'; date
 
-# Index bam files
-for i in .tophat/*/accepted_hits.bam; do echo $i; samtools index $i ; done;
-for i in .tophat/*/accepted_hits.bam; do echo $i; samtools idxstats $i ; done;
-wait
-echo 'Complete samtools indexing.'; date
-
-# Compare expression level of genes
-find . -name transcripts.gtf > gtflist.txt
-cuffcompare -i gtflist.txt -r genes.gtf
+# Compare expression in replicates
+find . -name *r*.gtf > ./cuffcompare/gtflist.txt
+cuffcompare -i ./cuffcompare/gtflist.txt -r refs/genes.gtf
+mv cuffcmp* cuffcompare/
 wait
 echo 'Complete cuffcompare.'; date
 
-# Get transfrag reconstruction statistics
-for i in 'find . -name *.tmap'; do echo $i; awk 'NR > 1 { s[$3]++ } END { for (j in s) { print j, s[j] }} ' $i; done;
+# Get count statistics
+for i in `find . -name *r*.gtf.tmap`; do echo $i; cut -f3 $i | sed 1d | sort | uniq -c; echo -e "\n"; done;
+for i in `find . -name *fpkm_tracking`; do echo $i; awk '{if ($10>0) print $0}' $i | awk 'OFS="\t" {print $1,$4,$6,$7,$8}' |  awk 'END{print NR}'; echo -e "\n";  done;
 wait
-echo 'Complete transfrag reconstruction.'; date
+echo 'Complete count statistics.'; date
 
-# Get significantly differentially expressed genes
+# Draw plots and get significance metrics
 Rscript diffexp.r
+wait
 echo 'Complete differential expression script.'; date
 
 echo 'Completed job.'
