@@ -7,7 +7,6 @@ Steps to run:</br>
 > Download both SLURM script and R code to local machine in work folder.
 > Edit email and project folder in SLURM header.
 > For non-hipergator use, edit path for reference, fasta and annotation files in SLURM script.
-> For non-hipergator use, make sure following programs are installed:
->> Samtools, TopHat, Bowtie, R, Cufflinks, Boost.
->> R packages cummeRbund, cowplot and dependencies.
+> Make sure following programs are installed: Samtools, TopHat, Bowtie, R, Cufflinks, Boost.
+> Make sure following R packages are installed: cummeRbund, cowplot and dependencies.
 > Run slurm script. ```sbatch batch```
