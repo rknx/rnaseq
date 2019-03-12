@@ -33,13 +33,13 @@ ln $fastq/*fq.gz ./fastq
 # Make output directories
 mkdir tophat cufflinks cuffmerge cuffdiff cuffcompare R
 
+# Make array of condiditons and replicates
+for file in fastq/*; do echo $file | awk -F '_' '{print $2"_"$3}'; done | uniq > fqlist
+mapfile -t list < fqlist
+rm ./fqlist
+
 # Aligning reads with Tophat
-tophat -p 8 -G $gene -o ./tophat/C1_R1 $bowtie/genome $fastq/GSM794483_C1_R1_1.fq.gz $fastq/GSM794483_C1_R1_2.fq.gz
-tophat -p 8 -G $gene -o ./tophat/C1_R2 $bowtie/genome $fastq/GSM794484_C1_R2_1.fq.gz $fastq/GSM794484_C1_R2_2.fq.gz
-tophat -p 8 -G $gene -o ./tophat/C1_R3 $bowtie/genome $fastq/GSM794485_C1_R3_1.fq.gz $fastq/GSM794485_C1_R3_2.fq.gz
-tophat -p 8 -G $gene -o ./tophat/C2_R1 $bowtie/genome $fastq/GSM794486_C2_R1_1.fq.gz $fastq/GSM794486_C2_R1_2.fq.gz
-tophat -p 8 -G $gene -o ./tophat/C2_R2 $bowtie/genome $fastq/GSM794487_C2_R2_1.fq.gz $fastq/GSM794487_C2_R2_2.fq.gz
-tophat -p 8 -G $gene -o ./tophat/C2_R3 $bowtie/genome $fastq/GSM794488_C2_R3_1.fq.gz $fastq/GSM794488_C2_R3_2.fq.gz
+for i in ${list[@]}; do tophat -p 8 -G $gene -o ./tophat/$i $bowtie/genome $fastq/GSM*_$i_1.fq.gz $fastq/GSM*_$i_2.fq.gz; done
 wait
 echo 'Completed tophat.'; date
 
