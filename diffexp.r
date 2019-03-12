@@ -24,7 +24,7 @@ plot_grid(plot_grid(a3+scale_x_continuous(limits=c(-4,4))+ggtitle("Genes: C1 vs 
                       theme(legend.position = 'none',plot.title=element_text(hjust=0.5)),
                     a6+scale_x_continuous(limits=c(-15,15))+ggtitle("Isoforms: C1 vs C2")+
                       theme(legend.position = 'none',plot.title=element_text(hjust=0.5)),ncol=2),
-          get_legend(aa[[3]]+theme(legend.position='bottom',legend.justification='center')),
+          get_legend(a3+theme(legend.position='bottom',legend.justification='center')),
           ncol=1, rel_heights=c(1,.1))
 
 # Plotting scatter plot
@@ -35,19 +35,25 @@ plot_grid(plot_grid(a1+ggtitle("Genes")+
                       theme(legend.position = 'none',plot.title=element_text(hjust=0.5)),
                     aj4+ggtitle("Isoforms")+
                       theme(legend.position = 'none',plot.title=element_text(hjust=0.5)),ncol=2),
-          get_legend(aa[[3]]+theme(legend.position='bottom',legend.justification='center')),
+          get_legend(a1+theme(legend.position='bottom',legend.justification='center')),
           ncol=1, rel_heights=c(1,.1))
 
 # PLotting expression of target genes
-mygenelist=c("Nacalpha","regucalcin","homer","Nep2")
-mygene = getGenes(cuff_data,mygenelist)
-a16=expressionBarplot(mygene)
-a17=expressionBarplot(isoforms(mygene))
-a18=plot_grid(expressionBarplot(isoforms(mygenelist[3])),
-              expressionBarplot(isoforms(mygenelist[1])),
-              expressionBarplot(isoforms(mygenelist[4])),
-              expressionBarplot(isoforms(mygenelist[2])),
-              ncol=4)
+mygenelist=c("homer","Nacalpha","Nep2","regucalcin")
+mygene1 = getGenes(cuff_data,mygenelist[1])
+mygene2 = getGenes(cuff_data,mygenelist[2])
+mygene3 = getGenes(cuff_data,mygenelist[3])
+mygene4 = getGenes(cuff_data,mygenelist[4])
+plot_grid(expressionBarplot(mygene1)+theme(legend.position="none"),
+              expressionBarplot(mygene2)+theme(legend.position="none"),
+              expressionBarplot(mygene3)+theme(legend.position="none"),
+              expressionBarplot(mygene4)+theme(legend.position="none"),
+              get_legend(expressionBarplot(mygene1)),ncol=5,rel.widths=c(1,1,1,1,0.5))
+plot_grid(expressionBarplot(isoforms(mygene1))+theme(legend.position="none"),
+              expressionBarplot(isoforms(mygene2))+theme(legend.position="none"),
+              expressionBarplot(isoforms(mygene3]))+theme(legend.position="none"),
+              expressionBarplot(isoforms(mygene4))+theme(legend.position="none"),
+              ncol=4, rel.widths=c(1,1.3,0.6,1))
 
 # Set significance metrics
 gene_diff = diffData(genes(cuff_data))
