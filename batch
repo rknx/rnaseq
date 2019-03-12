@@ -33,7 +33,7 @@ ln $fastq/*fq.gz ./fastq
 # Make output directories
 mkdir tophat cufflinks cuffmerge cuffdiff cuffcompare R
 
-# Make array of condiditons and replicates
+# Make array of conditions and replicates
 for file in fastq/*; do echo $file | awk -F '_' '{print $2"_"$3}'; done | uniq > fqlist
 mapfile -t list < fqlist
 rm ./fqlist
