@@ -44,7 +44,6 @@ wait
 echo 'Completed tophat.'; date
 
 # Assemble transcript with Cufflinks
-list=("C1_R1" "C1_R2" "C1_R3" "C2_R1" "C2_R2" "C2_R3")
 for i in ${list[@]}; do cufflinks -p 8 -o ./cufflinks/$i ./tophat/$i/accepted_hits.bam; done
 wait
 echo 'Complete cufflinks.'; date
