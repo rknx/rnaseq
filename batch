@@ -49,9 +49,10 @@ wait
 echo 'Complete cufflinks.'; date
 
 # Merge transcripts into transcriptome
-echo -e './cufflinks/C1_R1/transcripts.gtf\n./cufflinks/C1_R2/transcripts.gtf\n./cufflinks/C1_R3/transcripts.gtf\n./cufflinks/C2_R1/transcripts.gtf\n./cufflinks/C2_R2/transcripts.gtf\n./cufflinks/C2_R3/transcripts.gtf' > ./cuffmerge/assemblies.txt
-cuffmerge -o ./cuffmerge -g $gene -s $bowtie/genome.fa -p 8 ./cuffmerge/assemblies.txt
+for i in ${list[@]}; do echo ./cufflinks/$i/transcripts.gtf; done > assembly
+cuffmerge -o ./cuffmerge -g $gene -s $bowtie/genome.fa -p 8 assembly
 wait
+rm assembly
 echo 'Complete cuffmerge.'; date
 
 # Find differential expression
